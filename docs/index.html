@@ -113,6 +113,12 @@
   .sim input { width: 64px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; font-size: 14px; color: var(--navy); }
   .sim output { font-weight: 700; color: var(--navy); }
   .sim output.vermelho { color: var(--red); }
+  .nota-alvo { font-size: 18px !important; }
+  .provas-bim { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 7px; }
+  .provas-bim span { font-size: 12px; font-weight: 700; min-width: 52px; }
+  .prova { font-style: normal; font-size: 12px; font-weight: 600; background: var(--white); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
+  .falta-nota.vermelho .prova { border-color: #f1c3cb; }
+  .pesos { font-size: 12px; color: var(--dim); margin-top: 8px; }
 
   /* Faltas */
   .falta-num { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; font-size: 13.5px; color: var(--dim); }
@@ -172,6 +178,7 @@
 const DIAS = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
 const NB = 4; // bimestres
 let DATA = null;
+const SIM = []; // análise de notas por cartão, usada pelo simulador
 let aba = lerPref('aba', 'notas');
 let ordem = lerPref('ordem', 'risco');
 let mediaMin = Number(lerPref('mediaMin', '6'));
@@ -205,13 +212,58 @@ function analisarNotas(d, atual) {
   const abertos = NB - atual;
   const precisaMediaAbertos = abertos > 0 ? (alvo - somaFechados) / abertos : null;
   const mbf = d.notas?.media_bimestral_final ?? soma / NB;
+  const provas = analisarProvas(bims, atual, somaFechados, alvo);
   let nivel;
   if (faltamPontos === 0) nivel = 'garantida';
-  else if (precisaMediaAbertos == null || precisaMediaAbertos > 10) nivel = 'critico';
-  else if (precisaMediaAbertos > mediaMin) nivel = 'risco';
+  else if (provas.nota == null) nivel = 'critico';
+  else if (provas.nota > mediaMin) nivel = 'risco';
   else nivel = 'ok';
-  return { bims, soma, somaFechados, alvo, faltamPontos, abertos, precisaMediaAbertos, mbf, nivel, atual };
+  return { bims, soma, somaFechados, alvo, faltamPontos, abertos, precisaMediaAbertos, mbf, nivel, atual, provas };
 }
+
+/** Pesos da média bimestral, descobertos cruzando as notas do portal
+ * (bateu em 69 de 69 bimestres): matérias com 2 provas usam
+ * 40% A1 + 40% A2 + 20% AT; com 1 prova, 50% A1 + 50% AT. Em ambos soma-se
+ * o bônus (BS + BE), limita a 10 e arredonda para 1 casa. */
+function pesosDa(bims) {
+  return bims.some(b => b.a2 != null) ? { a1: .4, a2: .4, at: .2 } : { a1: .5, at: .5 };
+}
+
+const r1 = x => Math.round(x * 10 + 1e-9) / 10;
+
+/** MB de um bimestre aberto supondo nota `x` em toda avaliação ainda sem
+ * lançamento. Bônus de bimestres futuros é considerado 0 (conservador). */
+function mbSimulada(b, pesos, x) {
+  let base = 0;
+  for (const [k, p] of Object.entries(pesos)) base += p * (b.futuro || b[k] == null ? x : b[k]);
+  const bonus = b.futuro ? 0 : (b.bs ?? 0) + (b.be ?? 0);
+  return r1(Math.min(10, base + bonus));
+}
+
+function somaSimulada(bims, pesos, somaFechados, x) {
+  return bims.reduce((s, b) => s + (b.fechado ? 0 : mbSimulada(b, pesos, x)), somaFechados);
+}
+
+/** Menor nota (igual em todas as avaliações que faltam) que leva a soma
+ * das médias bimestrais até o alvo. null = nem tirando 10 dá. */
+function analisarProvas(bims, atual, somaFechados, alvo) {
+  const pesos = pesosDa(bims);
+  const faltando = bims
+    .map((b, i) => ({ bim: i + 1, comps: b.fechado ? [] : Object.keys(pesos).filter(k => b.futuro || b[k] == null) }))
+    .filter(f => f.comps.length);
+  const alcanca = x => somaSimulada(bims, pesos, somaFechados, x) >= alvo - 1e-9;
+  let nota;
+  if (!faltando.length || !alcanca(10)) nota = alcanca(0) ? 0 : null;
+  else if (alcanca(0)) nota = 0;
+  else {
+    let lo = 0, hi = 10;
+    for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; alcanca(m) ? hi = m : lo = m; }
+    nota = Math.ceil(hi * 10 - 1e-6) / 10; // sobe para a próxima casa decimal
+  }
+  return { pesos, faltando, nota };
+}
+
+const NOME_COMP = { a1: 'A1', a2: 'A2', at: 'Atividades' };
 
 function analisarFaltas(d) {
   const pct = d.percentual_faltas ?? 0;
@@ -287,7 +339,7 @@ function seletorOrdem() {
 }
 
 function renderNotas(an) {
-  const urg = x => x.n.nivel === 'garantida' ? -1 : x.n.precisaMediaAbertos ?? 99;
+  const urg = x => x.n.nivel === 'garantida' ? -1 : x.n.provas.nota ?? 99;
   const lista = ordenar(an, (a, b) => urg(b) - urg(a));
   let h = `<p class="legenda">A média final é a <b>soma das 4 médias bimestrais ÷ 4</b>. Para fechar com ${fmt(mediaMin)} você precisa somar <b>${fmt(mediaMin * NB)} pontos</b>. O bimestre com borda tracejada (${an[0]?.n.atual + 1 || 1}º) ainda está em andamento — a nota dele ainda pode subir.</p>`;
   h += seletorOrdem() + '<div class="grid">';
@@ -309,16 +361,19 @@ function renderNotas(an) {
     const progresso = Math.min(100, n.soma / (NB * 10) * 100);
     const marco = n.alvo / (NB * 10) * 100;
 
-    const nomesAbertos = n.bims.map((b, i) => b.fechado ? null : `${i + 1}º`).filter(Boolean);
-    const abertosTxt = nomesAbertos.length === 1 ? `no ${nomesAbertos[0]} bimestre` : `no ${nomesAbertos.slice(0, -1).join(', ')} e ${nomesAbertos.at(-1)} bimestres`;
+    const p = n.provas;
+    const pesosTxt = Object.entries(p.pesos).map(([k, v]) => `${NOME_COMP[k]} ${v * 100}%`).join(' + ') + ' + bônus';
+    const listaProvas = p.faltando.map(f =>
+      `<div class="provas-bim"><span>${f.bim}º bim</span>${f.comps.map(c => `<i class="prova">${NOME_COMP[c]}</i>`).join('')}</div>`).join('');
     let msg;
     if (n.nivel === 'garantida') {
-      msg = `Você já somou <b>${fmt(n.soma)}</b> pontos — média ${fmt(mediaMin)} garantida.`;
-    } else if (n.nivel === 'critico') {
-      msg = `Faltam <b>${fmt(n.faltamPontos)} pontos</b>. Precisaria de média <b>${fmt(n.precisaMediaAbertos)}</b> ${abertosTxt} — acima de 10. Vai depender de recuperação/exame final.`;
+      msg = `Você já somou <b>${fmt(n.soma)}</b> pontos — média ${fmt(mediaMin)} garantida, mesmo tirando 0 no que falta.`;
+    } else if (p.nota == null) {
+      msg = `Faltam <b>${fmt(n.faltamPontos)} pontos</b>. Nem tirando 10 em tudo que falta chega a ${fmt(mediaMin)} — vai depender de recuperação/exame final.`;
     } else {
-      msg = `Faltam <b>${fmt(n.faltamPontos)} pontos</b>: precisa de média <b>${fmt(n.precisaMediaAbertos)}</b> ${abertosTxt}.`;
+      msg = `Faltam <b>${fmt(n.faltamPontos)} pontos</b>. Precisa tirar pelo menos <b class="nota-alvo">${fmt(p.nota)}</b> em cada avaliação que falta:${listaProvas}`;
     }
+    SIM[idx] = n;
 
     const comp = [['a1','Avaliação 1'],['a2','Avaliação 2'],['at','Atividades'],['bs','Bônus'],['be','Bônus extra'],['ar','Recuperação'],['mb','Média']];
     const tabela = `<div class="tabela-wrap"><table class="comp"><tr><th></th>${n.bims.map((_, i) => `<th>${i + 1}º</th>`).join('')}</tr>
@@ -333,7 +388,8 @@ function renderNotas(an) {
       <div class="falta-nota ${risco ? 'vermelho' : ''}">${msg}</div>
       <details class="det"><summary>Detalhes e simulador</summary>
         ${tabela}
-        ${n.abertos > 0 ? `<div class="sim">Se eu fechar com <input type="number" min="0" max="10" step="0.1" data-sim="${idx}" data-soma="${n.somaFechados}" data-rest="${n.abertos}" placeholder="0–10"> ${abertosTxt}, fico com <output class="num" id="sim-${idx}">—</output></div>` : ''}
+        <div class="pesos">Média do bimestre nesta matéria: ${pesosTxt} (máx. 10)</div>
+        ${p.faltando.length ? `<div class="sim">Se eu tirar <input type="number" min="0" max="10" step="0.1" data-sim="${idx}" placeholder="0–10"> em cada avaliação que falta, fico com <output class="num" id="sim-${idx}">—</output></div>` : ''}
       </details>
     </div>`;
   });
@@ -392,8 +448,9 @@ function ligarEventos() {
     const out = document.getElementById('sim-' + inp.dataset.sim);
     const v = parseFloat(inp.value.replace(',', '.'));
     if (isNaN(v)) { out.textContent = '—'; out.className = 'num'; return; }
+    const n = SIM[inp.dataset.sim];
     const nota = Math.max(0, Math.min(10, v));
-    const media = (Number(inp.dataset.soma) + nota * Number(inp.dataset.rest)) / NB;
+    const media = somaSimulada(n.bims, n.provas.pesos, n.somaFechados, nota) / NB;
     out.textContent = `média ${fmt(media)} — ${media >= mediaMin ? 'aprovado' : 'abaixo da média'}`;
     out.className = 'num' + (media >= mediaMin ? '' : ' vermelho');
   }));
