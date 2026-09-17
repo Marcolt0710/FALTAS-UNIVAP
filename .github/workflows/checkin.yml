@@ -9,19 +9,14 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: "pages"
+  group: "deploy"
   cancel-in-progress: false
 
 jobs:
   checkin:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -36,11 +31,10 @@ jobs:
         working-directory: scraper
         run: python checkin.py
 
-      - name: Preparar artifact do Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs
-
-      - name: Publicar no GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      # data.json fica só no runner e no deploy da Netlify — nunca é
+      # commitado no repositório, então dados pessoais não vazam no git.
+      - name: Publicar na Netlify
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+        run: npx --yes netlify-cli@latest deploy --prod --dir docs --no-build --message "Atualização automática"

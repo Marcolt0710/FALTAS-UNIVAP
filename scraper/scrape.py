@@ -143,7 +143,7 @@ def build_aulas_por_dia(horario_rows: list[dict]) -> dict[str, dict]:
             if not texto:
                 continue
             # A célula normalmente traz o código da disciplina na primeira linha/token.
-            m = re.search(r"\b([A-Za-z]{1,3}\d{5,6})\b", texto)
+            m = re.search(r"\b([A-Za-z]{1,3}\d{4,6})\b", texto)
             codigo = m.group(1).upper() if m else texto.strip().upper()
             if not codigo:
                 continue
@@ -178,7 +178,7 @@ def build_grade(horario_rows: list[dict]) -> list[dict]:
             texto = (row.get(dia_col) or "").replace("\n", " ").strip()
             if not texto:
                 continue
-            m_cod = re.search(r"\b([A-Za-z]{1,3}\d{5,6})\b", texto)
+            m_cod = re.search(r"\b([A-Za-z]{1,3}\d{4,6})\b", texto)
             codigo = m_cod.group(1).upper() if m_cod else texto.upper()
             entradas.append({
                 "dia_semana_js": dia_idx,
@@ -253,8 +253,30 @@ def build_summary(raw_rows: list[dict], horario_por_codigo: dict[str, dict]) -> 
             "pode_faltar_ainda": pode_faltar_ainda,
             "aulas_por_dia_medio": aulas_por_dia_medio,
             "pode_faltar_dias": pode_faltar_dias,
+            "notas": build_notas(row),
         })
     return summary
+
+
+# Componentes de cada bimestre no boletim (sufixo = nº do bimestre):
+# A1/A2 = avaliações, AT = atividades, BS/BE = bônus, AR = recuperação,
+# MB = média do bimestre. MBF = média dos 4 bimestres; EF = exame final;
+# NC = nota do conselho.
+COMPONENTES_BIMESTRE = ["A1", "A2", "AT", "BS", "BE", "AR", "MB"]
+NUM_BIMESTRES = 4
+
+
+def build_notas(row: dict) -> dict:
+    bimestres = []
+    for b in range(1, NUM_BIMESTRES + 1):
+        bimestres.append({c.lower(): parse_number(row.get(f"{c}{b}", "")) for c in COMPONENTES_BIMESTRE})
+    return {
+        "bimestres": bimestres,
+        "media_bimestral_final": parse_number(row.get("MBF", "")),
+        "exame_final": parse_number(row.get("EF", "")),
+        "nota_conselho": parse_number(row.get("NC", "")),
+        "media_final": parse_number(row.get("mediaFinal", "")),
+    }
 
 
 def main() -> int:

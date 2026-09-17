@@ -3,582 +3,404 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Faltas UNIVAP</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0b1f44">
+<title>Painel UNIVAP — Notas e Faltas</title>
 <style>
   :root {
-    --bg: #f4f5f7;
-    --surface: #ffffff;
-    --text: #17181c;
-    --text-dim: #6b7280;
-    --text-faint: #9aa0ab;
-    --border: #e5e7eb;
-    --accent: #2563eb;
-    --accent-bg: rgba(37,99,235,0.08);
-    --ok: #16a34a;
-    --warn: #d97706;
-    --risk: #dc2626;
-    --ok-bg: rgba(22,163,74,0.12);
-    --warn-bg: rgba(217,119,6,0.14);
-    --risk-bg: rgba(220,38,38,0.14);
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0c0d10;
-      --surface: #16171b;
-      --text: #f2f2f3;
-      --text-dim: #9199a5;
-      --text-faint: #5b6270;
-      --border: #24262c;
-      --accent: #5b9bff;
-      --accent-bg: rgba(91,155,255,0.12);
-      --ok: #4ade80;
-      --warn: #fbbf24;
-      --risk: #f87171;
-      --ok-bg: rgba(74,222,128,0.10);
-      --warn-bg: rgba(251,191,36,0.12);
-      --risk-bg: rgba(248,113,113,0.12);
-    }
+    --navy: #0b1f44;
+    --navy-2: #13306a;
+    --navy-soft: #e8edf6;
+    --red: #c8102e;
+    --red-soft: #fbe9ec;
+    --white: #ffffff;
+    --bg: #f3f5f9;
+    --text: #0b1f44;
+    --dim: #5a6b8c;
+    --faint: #98a4bb;
+    --line: #dde3ee;
+    --radius: 14px;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   body {
-    margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased;
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased; font-size: 15px;
   }
-  .wrap { max-width: 560px; margin: 0 auto; padding: 20px 16px 80px; }
+  .num { font-variant-numeric: tabular-nums; }
 
-  /* Header */
-  header { margin-bottom: 22px; }
-  header .hoje { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
-  header .data { color: var(--text-dim); font-size: 14px; margin-top: 2px; }
-  header .sync { color: var(--text-faint); font-size: 12.5px; margin-top: 6px; }
+  /* Cabeçalho */
+  .topo { background: var(--navy); color: var(--white); padding: 22px 16px 64px; position: relative; overflow: hidden; }
+  .topo::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--red); }
+  .topo-in { max-width: 1040px; margin: 0 auto; display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+  .marca { font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; opacity: .7; }
+  .topo h1 { margin: 4px 0 2px; font-size: 26px; letter-spacing: -.01em; }
+  .sync { font-size: 13px; opacity: .75; }
+  .media-sel { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .media-sel select {
+    background: var(--navy-2); color: var(--white); border: 1px solid rgba(255,255,255,.25);
+    border-radius: 8px; padding: 6px 10px; font-size: 14px; font-weight: 600;
+  }
 
-  /* Section titles */
-  .section-title {
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin: 28px 0 10px;
-  }
-  .section-title:first-of-type { margin-top: 0; }
+  .wrap { max-width: 1040px; margin: -44px auto 0; padding: 0 16px 60px; position: relative; }
 
-  /* Aulas */
-  .aula-list { display: flex; flex-direction: column; }
-  .aula-row {
-    display: flex;
-    gap: 12px;
-    padding: 11px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .aula-row:last-child { border-bottom: none; }
-  .aula-row.passada { opacity: 0.45; }
-  .aula-check { width: 16px; flex-shrink: 0; text-align: center; color: var(--text-faint); font-size: 13px; padding-top: 2px; }
-  .aula-body { flex: 1; min-width: 0; }
-  .aula-horario { font-size: 13px; color: var(--text-dim); font-variant-numeric: tabular-nums; }
-  .aula-nome { font-size: 15.5px; font-weight: 600; margin-top: 1px; line-height: 1.3; }
-  .aula-local {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin-top: 3px;
-    display: inline-block;
-    cursor: pointer;
-  }
-  .aula-local:active { opacity: 0.6; }
-  .aula-local.add-btn { color: var(--accent); }
+  /* KPIs */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi { background: var(--white); border-radius: var(--radius); padding: 16px; box-shadow: 0 4px 16px rgba(11,31,68,.08); border-top: 3px solid var(--navy); }
+  .kpi.alerta { border-top-color: var(--red); }
+  .kpi .rot { font-size: 12px; color: var(--dim); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
+  .kpi .val { font-size: 30px; font-weight: 800; margin-top: 6px; line-height: 1; }
+  .kpi.alerta .val { color: var(--red); }
+  .kpi .sub { font-size: 12.5px; color: var(--dim); margin-top: 6px; }
 
-  .aula-destaque {
-    border-radius: 12px;
-    padding: 12px 14px;
-    background: var(--accent-bg);
-    border: 1px solid transparent;
-    margin: 2px 0;
+  /* Abas */
+  .abas { display: flex; gap: 6px; margin: 24px 0 14px; overflow-x: auto; scrollbar-width: none; }
+  .abas::-webkit-scrollbar { display: none; }
+  .aba {
+    flex-shrink: 0; border: 1px solid var(--line); background: var(--white); color: var(--navy);
+    font-size: 14px; font-weight: 600; padding: 9px 16px; border-radius: 999px; cursor: pointer;
   }
-  .aula-destaque .tag {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .aula-destaque .aula-horario { color: var(--text-dim); }
+  .aba.ativa { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .aba .badge { background: var(--red); color: #fff; border-radius: 999px; font-size: 11px; padding: 1px 7px; margin-left: 6px; }
 
-  .encerradas {
-    color: var(--text-faint);
-    font-size: 13.5px;
-    padding: 4px 0 2px;
-  }
-  .encerradas .linha { display: flex; gap: 8px; padding: 3px 0; }
-  .encerradas .linha span.h { font-variant-numeric: tabular-nums; width: 44px; flex-shrink: 0; }
-  .vazio { color: var(--text-dim); font-size: 14.5px; padding: 6px 0; }
+  .painel { display: none; }
+  .painel.ativo { display: block; }
+  .legenda { font-size: 13px; color: var(--dim); margin: 0 0 12px; line-height: 1.5; }
+
+  /* Cartões de disciplina */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 12px; }
+  .card { background: var(--white); border-radius: var(--radius); padding: 16px; border: 1px solid var(--line); border-left: 4px solid var(--navy); }
+  .card.risco { border-left-color: var(--red); }
+  .card-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+  .card h3 { margin: 0; font-size: 15.5px; line-height: 1.3; }
+  .card .cod { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .tag { flex-shrink: 0; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 4px 8px; border-radius: 6px; background: var(--navy-soft); color: var(--navy); }
+  .tag.vermelho { background: var(--red-soft); color: var(--red); }
+  .tag.solido { background: var(--red); color: #fff; }
+
+  .bims { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 14px 0 12px; }
+  .bim { background: var(--bg); border-radius: 8px; padding: 7px 4px; text-align: center; }
+  .bim .b { font-size: 10.5px; color: var(--dim); font-weight: 600; }
+  .bim .n { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .bim.parcial { outline: 1.5px dashed var(--faint); }
+  .bim.vazio .n { color: var(--faint); }
+  .bim.baixa .n { color: var(--red); }
+
+  .linha-media { display: flex; justify-content: space-between; align-items: baseline; font-size: 13.5px; color: var(--dim); }
+  .linha-media b { font-size: 20px; color: var(--navy); }
+  .linha-media b.vermelho { color: var(--red); }
+
+  .barra { height: 8px; background: var(--navy-soft); border-radius: 4px; overflow: hidden; margin-top: 8px; position: relative; }
+  .barra > i { display: block; height: 100%; background: var(--navy); border-radius: 4px; }
+  .barra.vermelha > i { background: var(--red); }
+  .barra .marco { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--red); }
+
+  .falta-nota { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--navy-soft); font-size: 13.5px; line-height: 1.45; }
+  .falta-nota.vermelho { background: var(--red-soft); color: #7d0a1c; }
+  .falta-nota b { font-size: 15px; }
+
+  details.det { margin-top: 10px; }
+  details.det summary { cursor: pointer; font-size: 13px; color: var(--navy-2); font-weight: 600; list-style: none; }
+  details.det summary::-webkit-details-marker { display: none; }
+  details.det summary::before { content: "▸ "; }
+  details.det[open] summary::before { content: "▾ "; }
+  .tabela-wrap { overflow-x: auto; margin-top: 8px; }
+  table.comp { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  table.comp th, table.comp td { padding: 5px 6px; text-align: center; border-bottom: 1px solid var(--line); }
+  table.comp th { color: var(--dim); font-weight: 600; }
+  table.comp td:first-child, table.comp th:first-child { text-align: left; }
+  .sim { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 13px; color: var(--dim); flex-wrap: wrap; }
+  .sim input { width: 64px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; font-size: 14px; color: var(--navy); }
+  .sim output { font-weight: 700; color: var(--navy); }
+  .sim output.vermelho { color: var(--red); }
 
   /* Faltas */
-  .falta-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .falta-item:last-child { border-bottom: none; }
-  .falta-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 7px; }
-  .falta-nome { font-size: 14.5px; font-weight: 600; line-height: 1.3; }
-  .falta-count { font-size: 14.5px; font-weight: 700; color: var(--text-dim); flex-shrink: 0; }
-  .falta-bar-bg { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-  .falta-bar-fill { height: 100%; border-radius: 3px; }
-  .falta-meta { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; }
-  .falta-meta b { font-weight: 700; }
-  .falta-meta.ok b { color: var(--ok); }
-  .falta-meta.warn b { color: var(--warn); }
-  .falta-meta.risk b { color: var(--risk); }
-  .falta-meta.auto { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+  .falta-num { display: flex; justify-content: space-between; align-items: baseline; margin-top: 12px; font-size: 13.5px; color: var(--dim); }
+  .falta-num b { font-size: 20px; color: var(--navy); }
+  .falta-num b.vermelho { color: var(--red); }
+  .pode { margin-top: 10px; font-size: 13.5px; }
+  .pode b { font-size: 15px; }
 
-  .erro { text-align: center; color: var(--text-dim); padding: 60px 20px; font-size: 14px; }
+  /* Horário */
+  .semana { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+  .dia { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .dia h4 { margin: 0; padding: 10px 14px; background: var(--navy); color: #fff; font-size: 14px; display: flex; justify-content: space-between; }
+  .dia.hoje h4 { background: var(--red); }
+  .aula { padding: 9px 14px; border-bottom: 1px solid var(--line); font-size: 13.5px; }
+  .aula:last-child { border-bottom: none; }
+  .aula .h { color: var(--dim); font-size: 12px; }
+  .aula .d { font-weight: 600; margin-top: 1px; }
+  .aula.agora { background: var(--red-soft); }
 
-  /* Presença manual */
-  .presenca-resumo { font-size: 13.5px; color: var(--text-dim); margin-bottom: 8px; }
-  .presenca-resumo b { color: var(--text); font-weight: 700; }
-  .presenca-lista { display: flex; flex-wrap: wrap; gap: 6px; }
-  .presenca-chip {
-    font-size: 12.5px;
-    color: var(--text-dim);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 7px;
-    padding: 4px 8px;
-  }
+  .ordem { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--dim); margin-bottom: 12px; flex-wrap: wrap; }
+  .ordem select { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); color: var(--navy); font-size: 13.5px; background: #fff; }
 
-  /* Semana */
-  .dia-tabs {
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-    margin-bottom: 4px;
-    scrollbar-width: none;
-  }
-  .dia-tabs::-webkit-scrollbar { display: none; }
-  .dia-tab {
-    flex-shrink: 0;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text-dim);
-    font-size: 13px;
-    font-weight: 600;
-    padding: 7px 13px;
-    border-radius: 999px;
-    cursor: pointer;
-  }
-  .dia-tab.ativo { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .dia-tab .ponto {
-    display: inline-block;
-    width: 5px; height: 5px;
-    border-radius: 50%;
-    background: currentColor;
-    margin-left: 6px;
-    opacity: 0.55;
-    vertical-align: middle;
-  }
+  .erro { text-align: center; color: var(--dim); padding: 60px 20px; background: #fff; border-radius: var(--radius); }
+  footer { text-align: center; color: var(--faint); font-size: 12px; margin-top: 30px; }
 
-  /* Bottom sheet */
-  .sheet-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.45);
-    display: flex; align-items: flex-end; justify-content: center;
-    opacity: 0; pointer-events: none;
-    transition: opacity .18s ease;
-    z-index: 50;
+  @media (max-width: 760px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .kpi .val { font-size: 25px; }
+    .topo h1 { font-size: 22px; }
   }
-  .sheet-overlay.open { opacity: 1; pointer-events: auto; }
-  .sheet {
-    background: var(--surface);
-    width: 100%; max-width: 560px;
-    border-radius: 16px 16px 0 0;
-    padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
-    transform: translateY(100%);
-    transition: transform .22s ease;
-  }
-  .sheet-overlay.open .sheet { transform: translateY(0); }
-  .sheet h3 { margin: 0 0 16px; font-size: 15.5px; font-weight: 700; }
-  .sheet label { display: block; font-size: 12.5px; color: var(--text-dim); margin-bottom: 5px; margin-top: 12px; }
-  .sheet label:first-of-type { margin-top: 0; }
-  .sheet input {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 10px 12px;
-    font-size: 15px;
-    color: var(--text);
-  }
-  .sheet input:focus { outline: none; border-color: var(--accent); }
-  .sheet-actions { display: flex; justify-content: flex-end; gap: 18px; margin-top: 20px; }
-  .sheet-actions button {
-    background: none; border: none; font-size: 14.5px; font-weight: 600;
-    padding: 8px 4px; cursor: pointer; color: var(--text-dim);
-  }
-  .sheet-actions button.primary { color: var(--accent); }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="hoje">Hoje</div>
-      <div class="data" id="dataAtual">—</div>
-      <div class="sync" id="syncInfo"></div>
-    </header>
-
-    <div id="content"></div>
-  </div>
-
-  <div class="sheet-overlay" id="sheetOverlay">
-    <div class="sheet">
-      <h3 id="sheetTitulo">Disciplina</h3>
-      <label for="sheetBloco">Bloco</label>
-      <input id="sheetBloco" type="text" placeholder="Ex: B" maxlength="40">
-      <label for="sheetSala">Sala</label>
-      <input id="sheetSala" type="text" placeholder="Ex: Laboratório 03" maxlength="60">
-      <div class="sheet-actions">
-        <button id="sheetCancelar">Cancelar</button>
-        <button class="primary" id="sheetSalvar">Salvar</button>
+  <div class="topo">
+    <div class="topo-in">
+      <div>
+        <div class="marca">UNIVAP · Aluno Online</div>
+        <h1>Notas e Faltas</h1>
+        <div class="sync" id="sync">Carregando…</div>
       </div>
+      <label class="media-sel">Média para passar
+        <select id="mediaMin">
+          <option value="5">5,0</option>
+          <option value="6">6,0</option>
+          <option value="7">7,0</option>
+        </select>
+      </label>
     </div>
   </div>
 
+  <div class="wrap">
+    <div id="app"></div>
+    <footer>Dados extraídos automaticamente do Portal Aluno Online. Confira sempre no portal oficial.</footer>
+  </div>
+
 <script>
-const DIAS_PT = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
-const MESES_PT = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
-
-const DIAS_ABREV = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
-
+const DIAS = ["Domingo","Segunda","Terça","Quarta","Quinta","Sexta","Sábado"];
+const NB = 4; // bimestres
 let DATA = null;
-let sheetCodigoAtual = null;
-let selectedDia = new Date().getDay();
+let aba = lerPref('aba', 'notas');
+let ordem = lerPref('ordem', 'risco');
+let mediaMin = Number(lerPref('mediaMin', '6'));
 
-function getClassLocations() {
+function lerPref(k, def) { try { return localStorage.getItem('univap.' + k) ?? def; } catch (e) { return def; } }
+function salvarPref(k, v) { try { localStorage.setItem('univap.' + k, v); } catch (e) {} }
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (n, casas = 1) => n == null || isNaN(n) ? '—' : Number(n).toFixed(casas).replace('.', ',');
+const nomeCurto = d => { const p = d.split(' - '); return p.length > 1 ? p.slice(1).join(' - ') : d; };
+
+/** Bimestre em andamento (índice 0..3), olhando a turma toda: é o último
+ * bimestre em que alguma disciplina já tem lançamento. O portal devolve
+ * MB=0 em bimestres não iniciados, então olhamos os componentes (A1, AT…). */
+function bimestreAtual(disciplinas) {
+  let atual = 0;
+  disciplinas.forEach(d => (d.notas?.bimestres || []).forEach((b, i) => {
+    if (['a1','a2','at','bs','be','ar'].some(k => b[k] != null) || (b.mb ?? 0) > 0) atual = Math.max(atual, i);
+  }));
+  return atual;
+}
+
+/** MBF = soma dos 4 MB ÷ 4, então para passar a soma precisa chegar em
+ * 4 × média mínima. Bimestres anteriores ao atual estão fechados; o atual
+ * e os seguintes estão "abertos" e é neles que a nota ainda pode vir. */
+function analisarNotas(d, atual) {
+  const bims = (d.notas?.bimestres || []).map((b, i) => ({ ...b, fechado: i < atual, parcial: i === atual, futuro: i > atual }));
+  const somaFechados = bims.reduce((s, b) => s + (b.fechado ? (b.mb ?? 0) : 0), 0);
+  const soma = somaFechados + (bims[atual]?.mb ?? 0); // notas de bimestre só sobem dentro dele
+  const alvo = mediaMin * NB;
+  const faltamPontos = Math.max(0, +(alvo - soma).toFixed(2));
+  const abertos = NB - atual;
+  const precisaMediaAbertos = abertos > 0 ? (alvo - somaFechados) / abertos : null;
+  const mbf = d.notas?.media_bimestral_final ?? soma / NB;
+  let nivel;
+  if (faltamPontos === 0) nivel = 'garantida';
+  else if (precisaMediaAbertos == null || precisaMediaAbertos > 10) nivel = 'critico';
+  else if (precisaMediaAbertos > mediaMin) nivel = 'risco';
+  else nivel = 'ok';
+  return { bims, soma, somaFechados, alvo, faltamPontos, abertos, precisaMediaAbertos, mbf, nivel, atual };
+}
+
+function analisarFaltas(d) {
+  const pct = d.percentual_faltas ?? 0;
+  const limite = (1 - (DATA.frequencia_minima ?? .75)) * 100;
+  const usado = limite ? Math.min(100, pct / limite * 100) : 0;
+  const nivel = pct >= limite ? 'reprovado' : usado >= 70 ? 'risco' : usado >= 45 ? 'atencao' : 'ok';
+  return { pct, limite, usado, nivel };
+}
+
+async function carregar() {
+  document.getElementById('mediaMin').value = String(mediaMin);
   try {
-    const raw = localStorage.getItem('classLocations');
-    const parsed = raw ? JSON.parse(raw) : {};
-    return (parsed && typeof parsed === 'object') ? parsed : {};
+    const r = await fetch('data.json?_=' + Date.now());
+    if (!r.ok) throw 0;
+    DATA = await r.json();
   } catch (e) {
-    return {};
-  }
-}
-function getClassLocation(codigo) {
-  return getClassLocations()[codigo] || null;
-}
-function saveClassLocation(codigo, location) {
-  const all = getClassLocations();
-  all[codigo] = location;
-  localStorage.setItem('classLocations', JSON.stringify(all));
-}
-function removeClassLocation(codigo) {
-  const all = getClassLocations();
-  delete all[codigo];
-  localStorage.setItem('classLocations', JSON.stringify(all));
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
-
-function toMinutes(hhmm) {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-}
-
-function formatDataHoje() {
-  const now = new Date();
-  const dia = DIAS_PT[now.getDay()];
-  return `${dia}, ${now.getDate()} de ${MESES_PT[now.getMonth()]}`;
-}
-
-async function load() {
-  const contentEl = document.getElementById('content');
-  document.getElementById('dataAtual').textContent = formatDataHoje();
-
-  try {
-    const res = await fetch('data.json?_=' + Date.now());
-    if (!res.ok) throw new Error('sem dados');
-    DATA = await res.json();
-  } catch (e) {
-    document.getElementById('syncInfo').textContent = '';
-    contentEl.innerHTML = '<div class="erro">Ainda não há dados. O cron roda 1x por dia — aguarde a primeira execução.</div>';
+    document.getElementById('sync').textContent = '';
+    document.getElementById('app').innerHTML = '<div class="erro">Ainda não há dados. A atualização automática roda 1× por dia.</div>';
     return;
   }
-
   const dt = new Date(DATA.atualizado_em);
-  document.getElementById('syncInfo').textContent = isNaN(dt) ? '' :
-    `Atualizado hoje às ${dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
-
+  document.getElementById('sync').textContent = isNaN(dt) ? '' :
+    `Atualizado em ${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
   render();
 }
 
 function render() {
-  const contentEl = document.getElementById('content');
-  contentEl.innerHTML = renderHoje() + renderSemana() + renderFaltas() + renderPresencaManual();
-  attachLocalHandlers();
+  const ds = DATA.disciplinas || [];
+  const atual = bimestreAtual(ds);
+  const an = ds.map(d => ({ d, n: analisarNotas(d, atual), f: analisarFaltas(d) }));
+
+  const emRiscoNota = an.filter(x => x.n.nivel === 'risco' || x.n.nivel === 'critico');
+  const emRiscoFalta = an.filter(x => x.f.nivel === 'risco' || x.f.nivel === 'reprovado');
+  const mediaGeral = an.length ? an.reduce((s, x) => s + (x.n.mbf ?? 0), 0) / an.length : null;
+  const totalFaltas = ds.reduce((s, d) => s + (d.faltas ?? 0), 0);
+  const garantidas = an.filter(x => x.n.nivel === 'garantida').length;
+  const piorFalta = [...an].sort((a, b) => b.f.pct - a.f.pct)[0];
+
+  let h = `<div class="kpis">
+    <div class="kpi"><div class="rot">Média geral atual</div><div class="val num">${fmt(mediaGeral)}</div><div class="sub">soma dos bimestres ÷ 4</div></div>
+    <div class="kpi ${emRiscoNota.length ? 'alerta' : ''}"><div class="rot">Precisam de atenção</div><div class="val num">${emRiscoNota.length}</div><div class="sub">${garantidas} já garantida${garantidas === 1 ? '' : 's'} com ${fmt(mediaMin)}</div></div>
+    <div class="kpi"><div class="rot">Total de faltas</div><div class="val num">${fmt(totalFaltas, 0)}</div><div class="sub">em ${ds.length} disciplinas</div></div>
+    <div class="kpi ${emRiscoFalta.length ? 'alerta' : ''}"><div class="rot">Maior % de faltas</div><div class="val num">${piorFalta ? fmt(piorFalta.f.pct) + '%' : '—'}</div><div class="sub">${piorFalta ? esc(nomeCurto(piorFalta.d.disciplina)) : ''} · limite ${fmt(piorFalta?.f.limite ?? 25, 0)}%</div></div>
+  </div>`;
+
+  h += `<div class="abas">
+    <button class="aba ${aba === 'notas' ? 'ativa' : ''}" data-aba="notas">Notas${emRiscoNota.length ? `<span class="badge">${emRiscoNota.length}</span>` : ''}</button>
+    <button class="aba ${aba === 'faltas' ? 'ativa' : ''}" data-aba="faltas">Faltas${emRiscoFalta.length ? `<span class="badge">${emRiscoFalta.length}</span>` : ''}</button>
+    <button class="aba ${aba === 'horario' ? 'ativa' : ''}" data-aba="horario">Horário</button>
+  </div>`;
+
+  h += `<div class="painel ${aba === 'notas' ? 'ativo' : ''}">${renderNotas(an)}</div>`;
+  h += `<div class="painel ${aba === 'faltas' ? 'ativo' : ''}">${renderFaltas(an)}</div>`;
+  h += `<div class="painel ${aba === 'horario' ? 'ativo' : ''}">${renderHorario()}</div>`;
+
+  document.getElementById('app').innerHTML = h;
+  ligarEventos();
 }
 
-function minutosParaTexto(min) {
-  if (min < 60) return `${min} MIN`;
-  const h = Math.floor(min / 60), m = min % 60;
-  return m === 0 ? `${h}H` : `${h}H ${m}MIN`;
+function ordenar(lista, chaveRisco) {
+  const l = [...lista];
+  if (ordem === 'nome') l.sort((a, b) => nomeCurto(a.d.disciplina).localeCompare(nomeCurto(b.d.disciplina), 'pt-BR'));
+  else l.sort(chaveRisco);
+  return l;
 }
 
-function getAulasDoDia(diaSemana) {
-  const grade = DATA.grade || [];
-  return grade
-    .filter(a => a.dia_semana_js === diaSemana)
-    .map(a => ({ ...a, inicioMin: toMinutes(a.inicio), fimMin: toMinutes(a.fim) }))
-    .sort((a, b) => a.inicioMin - b.inicioMin);
+function seletorOrdem() {
+  return `<div class="ordem">Ordenar por
+    <select id="ordem">
+      <option value="risco" ${ordem === 'risco' ? 'selected' : ''}>Mais urgente primeiro</option>
+      <option value="nome" ${ordem === 'nome' ? 'selected' : ''}>Nome</option>
+    </select></div>`;
 }
 
-function renderHoje() {
-  const now = new Date();
-  const diaSemana = now.getDay();
-  const agoraMin = now.getHours() * 60 + now.getMinutes();
-  const aulasHoje = getAulasDoDia(diaSemana);
+function renderNotas(an) {
+  const urg = x => x.n.nivel === 'garantida' ? -1 : x.n.precisaMediaAbertos ?? 99;
+  const lista = ordenar(an, (a, b) => urg(b) - urg(a));
+  let h = `<p class="legenda">A média final é a <b>soma das 4 médias bimestrais ÷ 4</b>. Para fechar com ${fmt(mediaMin)} você precisa somar <b>${fmt(mediaMin * NB)} pontos</b>. O bimestre com borda tracejada (${an[0]?.n.atual + 1 || 1}º) ainda está em andamento — a nota dele ainda pode subir.</p>`;
+  h += seletorOrdem() + '<div class="grid">';
 
-  let html = '<div class="section-title">Hoje</div>';
+  lista.forEach(({ d, n }, idx) => {
+    const risco = n.nivel === 'risco' || n.nivel === 'critico';
+    const tag = {
+      garantida: '<span class="tag">Garantida</span>',
+      ok: '<span class="tag">No caminho</span>',
+      risco: '<span class="tag vermelho">Atenção</span>',
+      critico: '<span class="tag solido">Crítico</span>',
+    }[n.nivel];
 
-  if (aulasHoje.length === 0) {
-    return html + '<div class="vazio">Nenhuma aula hoje.</div>';
-  }
+    const bimsHtml = n.bims.map((b, i) => {
+      const cls = b.futuro ? 'vazio' : b.fechado && (b.mb ?? 0) < mediaMin ? 'baixa' : '';
+      return `<div class="bim ${cls} ${b.parcial ? 'parcial' : ''}"><div class="b">${i + 1}º bim${b.parcial ? ' · parcial' : ''}</div><div class="n num">${b.futuro ? '—' : fmt(b.mb)}</div></div>`;
+    }).join('');
 
-  const todasEncerradas = aulasHoje.every(a => a.fimMin <= agoraMin);
+    const progresso = Math.min(100, n.soma / (NB * 10) * 100);
+    const marco = n.alvo / (NB * 10) * 100;
 
-  if (todasEncerradas) {
-    html += '<div class="encerradas">';
-    aulasHoje.forEach(a => {
-      html += `<div class="linha"><span class="h">✓ ${a.inicio}</span><span>${escapeHtml(nomeCurto(a.disciplina))}</span></div>`;
-    });
-    html += '<div style="margin-top:6px;">Aulas encerradas por hoje.</div></div>';
-    return html;
-  }
-
-  const atual = aulasHoje.find(a => agoraMin >= a.inicioMin && agoraMin < a.fimMin);
-  const proxima = !atual ? aulasHoje.find(a => a.inicioMin > agoraMin) : null;
-
-  html += '<div class="aula-list">';
-  aulasHoje.forEach(a => {
-    const isPassada = a.fimMin <= agoraMin;
-    const isAtual = atual && atual === a;
-    const isProxima = proxima && proxima === a;
-
-    if (isAtual || isProxima) {
-      const tag = isAtual ? 'AGORA' : `PRÓXIMA · EM ${minutosParaTexto(a.inicioMin - agoraMin)}`;
-      html += `
-        <div class="aula-destaque">
-          <div class="tag">${tag}</div>
-          ${renderCorpoAula(a, false)}
-        </div>`;
+    const nomesAbertos = n.bims.map((b, i) => b.fechado ? null : `${i + 1}º`).filter(Boolean);
+    const abertosTxt = nomesAbertos.length === 1 ? `no ${nomesAbertos[0]} bimestre` : `no ${nomesAbertos.slice(0, -1).join(', ')} e ${nomesAbertos.at(-1)} bimestres`;
+    let msg;
+    if (n.nivel === 'garantida') {
+      msg = `Você já somou <b>${fmt(n.soma)}</b> pontos — média ${fmt(mediaMin)} garantida.`;
+    } else if (n.nivel === 'critico') {
+      msg = `Faltam <b>${fmt(n.faltamPontos)} pontos</b>. Precisaria de média <b>${fmt(n.precisaMediaAbertos)}</b> ${abertosTxt} — acima de 10. Vai depender de recuperação/exame final.`;
     } else {
-      html += `<div class="aula-row ${isPassada ? 'passada' : ''}">
-        <div class="aula-check">${isPassada ? '✓' : ''}</div>
-        <div class="aula-body">${renderCorpoAula(a, true)}</div>
-      </div>`;
+      msg = `Faltam <b>${fmt(n.faltamPontos)} pontos</b>: precisa de média <b>${fmt(n.precisaMediaAbertos)}</b> ${abertosTxt}.`;
     }
+
+    const comp = [['a1','Avaliação 1'],['a2','Avaliação 2'],['at','Atividades'],['bs','Bônus'],['be','Bônus extra'],['ar','Recuperação'],['mb','Média']];
+    const tabela = `<div class="tabela-wrap"><table class="comp"><tr><th></th>${n.bims.map((_, i) => `<th>${i + 1}º</th>`).join('')}</tr>
+      ${comp.map(([k, rot]) => `<tr><td>${rot}</td>${n.bims.map(b => `<td class="num">${!b.futuro && b[k] != null ? fmt(b[k]) : '·'}</td>`).join('')}</tr>`).join('')}
+    </table></div>`;
+
+    h += `<div class="card ${risco ? 'risco' : ''}">
+      <div class="card-top"><div><h3>${esc(nomeCurto(d.disciplina))}</h3><div class="cod">${esc(d.codigo)}</div></div>${tag}</div>
+      <div class="bims">${bimsHtml}</div>
+      <div class="linha-media"><span>Média até agora (÷4)</span><b class="num ${(n.mbf ?? 0) < mediaMin ? 'vermelho' : ''}">${fmt(n.mbf)}</b></div>
+      <div class="barra ${risco ? 'vermelha' : ''}"><i style="width:${progresso}%"></i><span class="marco" style="left:${marco}%"></span></div>
+      <div class="falta-nota ${risco ? 'vermelho' : ''}">${msg}</div>
+      <details class="det"><summary>Detalhes e simulador</summary>
+        ${tabela}
+        ${n.abertos > 0 ? `<div class="sim">Se eu fechar com <input type="number" min="0" max="10" step="0.1" data-sim="${idx}" data-soma="${n.somaFechados}" data-rest="${n.abertos}" placeholder="0–10"> ${abertosTxt}, fico com <output class="num" id="sim-${idx}">—</output></div>` : ''}
+      </details>
+    </div>`;
   });
-  html += '</div>';
-  return html;
+  return h + '</div>';
 }
 
-function renderSemana() {
-  const grade = DATA.grade || [];
-  if (grade.length === 0) return '';
-
-  const hojeIdx = new Date().getDay();
-  const diasComAula = new Set(grade.map(a => a.dia_semana_js));
-
-  let html = '<div class="section-title">Semana</div><div class="dia-tabs">';
-  for (let i = 0; i < 7; i++) {
-    const ativo = i === selectedDia ? 'ativo' : '';
-    const marcador = diasComAula.has(i) ? '<span class="ponto"></span>' : '';
-    html += `<button class="dia-tab ${ativo}" data-dia="${i}">${DIAS_ABREV[i]}${i === hojeIdx ? ' · hoje' : ''}${marcador}</button>`;
-  }
-  html += '</div>';
-
-  const aulas = getAulasDoDia(selectedDia);
-  if (aulas.length === 0) {
-    return html + '<div class="vazio">Nenhuma aula nesse dia.</div>';
-  }
-
-  const now = new Date();
-  const agoraMin = now.getHours() * 60 + now.getMinutes();
-  const ehHoje = selectedDia === hojeIdx;
-  const atual = ehHoje ? aulas.find(a => agoraMin >= a.inicioMin && agoraMin < a.fimMin) : null;
-  const proxima = ehHoje && !atual ? aulas.find(a => a.inicioMin > agoraMin) : null;
-
-  html += '<div class="aula-list">';
-  aulas.forEach(a => {
-    const isPassada = ehHoje && a.fimMin <= agoraMin;
-    const isAtual = atual === a;
-    const isProxima = proxima === a;
-
-    if (isAtual || isProxima) {
-      const tag = isAtual ? 'AGORA' : `PRÓXIMA · EM ${minutosParaTexto(a.inicioMin - agoraMin)}`;
-      html += `<div class="aula-destaque"><div class="tag">${tag}</div>${renderCorpoAula(a, false)}</div>`;
-    } else {
-      html += `<div class="aula-row ${isPassada ? 'passada' : ''}">
-        <div class="aula-check">${isPassada ? '✓' : ''}</div>
-        <div class="aula-body">${renderCorpoAula(a, true)}</div>
-      </div>`;
-    }
-  });
-  html += '</div>';
-  return html;
-}
-
-function nomeCurto(disciplina) {
-  const partes = disciplina.split(' - ');
-  return partes.length > 1 ? partes.slice(1).join(' - ') : disciplina;
-}
-
-function renderCorpoAula(a, comHorarioLinha) {
-  const local = getClassLocation(a.codigo);
-  const localHtml = local
-    ? `<span class="aula-local" data-codigo="${escapeHtml(a.codigo)}" data-nome="${escapeHtml(nomeCurto(a.disciplina))}">${escapeHtml([local.block && 'Bloco ' + local.block, local.room].filter(Boolean).join(' · '))}</span>`
-    : `<span class="aula-local add-btn" data-codigo="${escapeHtml(a.codigo)}" data-nome="${escapeHtml(nomeCurto(a.disciplina))}">+ Adicionar sala</span>`;
-
-  return `
-    ${comHorarioLinha ? `<div class="aula-horario">${a.inicio} — ${a.fim}</div>` : `<div class="aula-horario">${a.inicio} — ${a.fim}</div>`}
-    <div class="aula-nome">${escapeHtml(nomeCurto(a.disciplina))}</div>
-    ${localHtml}
-  `;
-}
-
-function nivelDe(pct) {
-  if (pct >= 20) return { nivel: 'risk', cor: 'var(--risk)' };
-  if (pct >= 12) return { nivel: 'warn', cor: 'var(--warn)' };
-  return { nivel: 'ok', cor: 'var(--ok)' };
-}
-
-/** Estima faltas/dias-restantes "segundo você" (check-ins do Atalho +
- * faltas que você mesmo anotou), independente do que o portal mostra.
- * Só considera dias com sinal EXPLÍCITO (presença confirmada OU falta
- * confirmada) — um dia de aula em que você simplesmente esqueceu de
- * disparar o Atalho não conta pra nenhum dos dois lados. */
-function computeAutotrack(d) {
-  const presencas = DATA.presencas || [];
-  const faltasManuais = DATA.faltas_manuais || [];
-  if ((presencas.length === 0 && faltasManuais.length === 0) || !d.codigo) return null;
-
-  const diasComAula = new Set((DATA.grade || []).filter(g => g.codigo === d.codigo).map(g => g.dia_semana_js));
-  if (diasComAula.size === 0) return null;
-
-  const diasPresente = presencas.filter(s => diasComAula.has(new Date(s + 'T00:00:00').getDay())).length;
-  const diasFalta = faltasManuais.filter(s => diasComAula.has(new Date(s + 'T00:00:00').getDay())).length;
-  const diasEsperados = diasPresente + diasFalta;
-  if (diasEsperados === 0) return null;
-
-  const pct = Math.round((diasFalta / diasEsperados) * 1000) / 10;
-
-  let podeFaltarDias = null;
-  if (d.aulas_por_dia_medio && d.aulas_previstas != null && DATA.frequencia_minima != null) {
-    const budgetDias = Math.floor((d.aulas_previstas * (1 - DATA.frequencia_minima)) / d.aulas_por_dia_medio);
-    podeFaltarDias = Math.max(0, budgetDias - diasFalta);
-  }
-
-  return { pct, podeFaltarDias, faltasDias: diasFalta, diasEsperados };
-}
-
-function renderFaltas() {
-  const disciplinas = DATA.disciplinas || [];
-  if (disciplinas.length === 0) return '';
-
-  let html = '<div class="section-title">Faltas</div>';
-  disciplinas.forEach(d => {
-    const pct = d.percentual_faltas ?? 0;
-    const { nivel, cor } = nivelDe(pct);
-
+function renderFaltas(an) {
+  const lista = ordenar(an, (a, b) => b.f.usado - a.f.usado);
+  const lim = an[0]?.f.limite ?? 25;
+  let h = `<p class="legenda">Você pode faltar até <b>${fmt(lim, 0)}%</b> das aulas de cada disciplina (frequência mínima de ${fmt(100 - lim, 0)}%). A barra mostra quanto do limite você já usou; a linha vermelha é o limite.</p>`;
+  h += seletorOrdem() + '<div class="grid">';
+  lista.forEach(({ d, f }) => {
+    const vermelho = f.nivel === 'risco' || f.nivel === 'reprovado';
+    const tag = { ok: '<span class="tag">Tranquilo</span>', atencao: '<span class="tag vermelho">Cuidado</span>', risco: '<span class="tag solido">Risco</span>', reprovado: '<span class="tag solido">Estourou</span>' }[f.nivel];
     const dias = d.pode_faltar_dias;
-    const diasTexto = dias != null ? `Pode faltar mais ${dias} dia${dias === 1 ? '' : 's'}` : `Pode faltar mais ${d.pode_faltar_ainda ?? '—'} aulas`;
-
-    const auto = computeAutotrack(d);
-    let autoHtml = '';
-    if (auto) {
-      const { nivel: nivelAuto, cor: corAuto } = nivelDe(auto.pct);
-      const diasAutoTexto = auto.podeFaltarDias != null ? `pode faltar mais ${auto.podeFaltarDias} dia${auto.podeFaltarDias === 1 ? '' : 's'}` : `${auto.faltasDias} falta${auto.faltasDias === 1 ? '' : 's'}`;
-      autoHtml = `<div class="falta-meta auto ${nivelAuto}">📍 Segundo você (${auto.diasEsperados} dia${auto.diasEsperados === 1 ? '' : 's'} registrado${auto.diasEsperados === 1 ? '' : 's'}): <b style="color:${corAuto}">${auto.pct}%</b> · ${diasAutoTexto}</div>`;
-    }
-
-    html += `
-      <div class="falta-item">
-        <div class="falta-head">
-          <div class="falta-nome">${escapeHtml(nomeCurto(d.disciplina))}</div>
-          <div class="falta-count">${d.faltas ?? '—'}</div>
-        </div>
-        <div class="falta-bar-bg"><div class="falta-bar-fill" style="width:${Math.min(pct,100)}%;background:${cor}"></div></div>
-        <div class="falta-meta ${nivel}">Portal: <b>${pct}%</b> · ${diasTexto}</div>
-        ${autoHtml}
-      </div>`;
+    const limiteAulas = d.aulas_previstas != null ? d.aulas_previstas * lim / 100 : null;
+    h += `<div class="card ${vermelho ? 'risco' : ''}">
+      <div class="card-top"><div><h3>${esc(nomeCurto(d.disciplina))}</h3><div class="cod">${esc(d.codigo)}</div></div>${tag}</div>
+      <div class="falta-num"><span>Faltas</span><b class="num ${vermelho ? 'vermelho' : ''}">${fmt(d.faltas, 0)}<span style="font-size:13px;color:var(--dim);font-weight:600"> / ${fmt(limiteAulas, 0)} permitidas</span></b></div>
+      <div class="barra ${vermelho ? 'vermelha' : ''}"><i style="width:${f.usado}%"></i><span class="marco" style="left:calc(100% - 2px)"></span></div>
+      <div class="linha-media" style="margin-top:8px"><span>${fmt(f.pct)}% de faltas · ${fmt(d.aulas_previstas, 0)} aulas no ano</span><span class="num">${fmt(f.usado, 0)}% do limite</span></div>
+      <div class="pode">Ainda pode faltar <b class="num">${fmt(d.pode_faltar_ainda, 0)} aulas</b>${dias != null ? ` ≈ <b class="num">${dias} dia${dias === 1 ? '' : 's'}</b> de aula` : ''}</div>
+    </div>`;
   });
-  return html;
+  return h + '</div>';
 }
 
-function renderPresencaManual() {
-  const presencas = DATA.presencas || [];
-  if (presencas.length === 0) return '';
+function renderHorario() {
+  const grade = DATA.grade || [];
+  if (!grade.length) return '<div class="erro">Horário não disponível.</div>';
+  const agora = new Date();
+  const hojeIdx = agora.getDay();
+  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
+  const min = t => { const [a, b] = t.split(':').map(Number); return a * 60 + b; };
+  const faltasPor = Object.fromEntries((DATA.disciplinas || []).map(d => [d.codigo, d]));
 
-  const ordenadas = [...presencas].sort().reverse();
-  const hoje = new Date();
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-  const esteMes = presencas.filter(d => new Date(d + 'T00:00:00') >= inicioMes).length;
-
-  let html = '<div class="section-title">Presença confirmada por mim</div>';
-  html += `<div class="presenca-resumo"><b>${esteMes}</b> dia${esteMes === 1 ? '' : 's'} confirmado${esteMes === 1 ? '' : 's'} este mês · registrado direto do celular, independente do portal</div>`;
-  html += '<div class="presenca-lista">';
-  ordenadas.slice(0, 14).forEach(d => {
-    const dt = new Date(d + 'T00:00:00');
-    html += `<span class="presenca-chip">${dt.getDate().toString().padStart(2,'0')}/${(dt.getMonth()+1).toString().padStart(2,'0')}</span>`;
-  });
-  html += '</div>';
-  return html;
-}
-
-function attachLocalHandlers() {
-  document.querySelectorAll('.aula-local').forEach(el => {
-    el.addEventListener('click', () => abrirSheet(el.dataset.codigo, el.dataset.nome));
-  });
-  document.querySelectorAll('.dia-tab').forEach(el => {
-    el.addEventListener('click', () => {
-      selectedDia = Number(el.dataset.dia);
-      render();
+  let h = '<div class="semana">';
+  [1, 2, 3, 4, 5, 6, 0].forEach(i => {
+    const aulas = grade.filter(a => a.dia_semana_js === i).sort((a, b) => min(a.inicio) - min(b.inicio));
+    if (!aulas.length) return;
+    h += `<div class="dia ${i === hojeIdx ? 'hoje' : ''}"><h4>${DIAS[i]}<span>${i === hojeIdx ? 'hoje' : ''}</span></h4>`;
+    aulas.forEach(a => {
+      const agoraCls = i === hojeIdx && agoraMin >= min(a.inicio) && agoraMin < min(a.fim) ? 'agora' : '';
+      const d = faltasPor[a.codigo];
+      h += `<div class="aula ${agoraCls}"><div class="h num">${a.inicio} – ${a.fim}</div><div class="d">${esc(nomeCurto(d?.disciplina || a.disciplina))}</div></div>`;
     });
+    h += '</div>';
   });
+  return h + '</div>';
 }
 
-function abrirSheet(codigo, nomeDisciplina) {
-  sheetCodigoAtual = codigo;
-  document.getElementById('sheetTitulo').textContent = nomeDisciplina;
-  const atual = getClassLocation(codigo) || {};
-  document.getElementById('sheetBloco').value = atual.block || '';
-  document.getElementById('sheetSala').value = atual.room || '';
-  document.getElementById('sheetOverlay').classList.add('open');
+function ligarEventos() {
+  document.querySelectorAll('.aba').forEach(b => b.addEventListener('click', () => { aba = b.dataset.aba; salvarPref('aba', aba); render(); }));
+  document.querySelectorAll('#ordem').forEach(s => s.addEventListener('change', () => { ordem = s.value; salvarPref('ordem', ordem); render(); }));
+  document.querySelectorAll('[data-sim]').forEach(inp => inp.addEventListener('input', () => {
+    const out = document.getElementById('sim-' + inp.dataset.sim);
+    const v = parseFloat(inp.value.replace(',', '.'));
+    if (isNaN(v)) { out.textContent = '—'; out.className = 'num'; return; }
+    const nota = Math.max(0, Math.min(10, v));
+    const media = (Number(inp.dataset.soma) + nota * Number(inp.dataset.rest)) / NB;
+    out.textContent = `média ${fmt(media)} — ${media >= mediaMin ? 'aprovado' : 'abaixo da média'}`;
+    out.className = 'num' + (media >= mediaMin ? '' : ' vermelho');
+  }));
 }
 
-function fecharSheet() {
-  document.getElementById('sheetOverlay').classList.remove('open');
-  sheetCodigoAtual = null;
-}
-
-document.getElementById('sheetCancelar').addEventListener('click', fecharSheet);
-document.getElementById('sheetOverlay').addEventListener('click', (e) => {
-  if (e.target.id === 'sheetOverlay') fecharSheet();
-});
-document.getElementById('sheetSalvar').addEventListener('click', () => {
-  if (!sheetCodigoAtual) return;
-  const block = document.getElementById('sheetBloco').value.trim();
-  const room = document.getElementById('sheetSala').value.trim();
-  if (!block && !room) {
-    removeClassLocation(sheetCodigoAtual);
-  } else {
-    saveClassLocation(sheetCodigoAtual, { block, room });
-  }
-  fecharSheet();
-  render();
-});
-
-load();
+document.getElementById('mediaMin').addEventListener('change', e => { mediaMin = Number(e.target.value); salvarPref('mediaMin', mediaMin); render(); });
+carregar();
 </script>
 </body>
 </html>
