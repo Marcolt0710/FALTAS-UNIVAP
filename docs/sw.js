@@ -1,6 +1,6 @@
 // Service worker do app: sempre tenta a rede primeiro (dados do dia) e,
 // sem internet, mostra a última versão salva.
-const CACHE = 'univap-v1';
+const CACHE = 'univap-v2';
 const ARQUIVOS = ['./', 'index.html', 'data.json', 'manifest.webmanifest', 'icons/icon-192.png'];
 
 self.addEventListener('install', e => {

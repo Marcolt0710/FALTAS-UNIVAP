@@ -31,10 +31,19 @@ jobs:
         working-directory: scraper
         run: python checkin.py
 
-      # data.json fica só no runner e no deploy da Netlify — nunca é
-      # commitado no repositório, então dados pessoais não vazam no git.
-      - name: Publicar na Netlify
+      # Compara com o data.json que está no ar e marca o que mudou (selo
+      # "novo" no painel). No cron diário também manda push pelo ntfy.
+      - name: Manter as novidades marcadas
         env:
-          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
-          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
-        run: npx --yes netlify-cli@latest deploy --prod --dir docs --no-build --message "Atualização automática"
+          PAINEL_URL: ${{ vars.PAINEL_URL }}
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+        run: python scraper/mudancas.py --sem-aviso
+
+      # data.json fica só no runner e no deploy da Vercel — nunca é
+      # commitado no repositório, então dados pessoais não vazam no git.
+      - name: Publicar na Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+        run: npx --yes vercel@latest deploy docs --prod --yes --token "$VERCEL_TOKEN"

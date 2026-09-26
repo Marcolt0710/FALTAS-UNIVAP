@@ -145,6 +145,44 @@
   .aula .d { font-weight: 600; margin-top: 1px; }
   .aula.agora { background: var(--red-soft); }
 
+  /* Hoje: posso faltar? */
+  .veredito { border-radius: var(--radius); padding: 16px 18px; background: var(--navy); color: #fff; font-size: 15px; line-height: 1.5; margin-bottom: 12px; }
+  .veredito .pq { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .75; }
+  .veredito .resp { font-size: 21px; font-weight: 800; margin: 2px 0 4px; }
+  .veredito.cuidado { background: var(--red-soft); color: #7d0a1c; border: 1px solid #f1c3cb; }
+  .veredito.nao { background: var(--red); }
+  .hoje-lista { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+  .hoje-lista h4 { margin: 0; padding: 10px 14px; background: var(--navy); color: #fff; font-size: 14px; display: flex; justify-content: space-between; }
+  .h-aula { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 14px; border-bottom: 1px solid var(--line); border-left: 4px solid transparent; }
+  .h-aula:last-child { border-bottom: none; }
+  .h-aula.cuidado { border-left-color: #e8909e; }
+  .h-aula.estoura { border-left-color: var(--red); background: var(--red-soft); }
+  .h-aula.agora { box-shadow: inset 0 0 0 2px var(--red); }
+  .h-aula .h { color: var(--dim); font-size: 12px; }
+  .h-aula .d { font-weight: 600; font-size: 14.5px; margin-top: 1px; }
+  .h-aula .q { text-align: right; font-size: 12px; color: var(--dim); flex-shrink: 0; }
+  .h-aula .q b { display: block; font-size: 16px; color: var(--navy); }
+  .h-aula.estoura .q b, .h-aula.cuidado .q b { color: var(--red); }
+
+  /* Novidades */
+  .novidades { background: var(--white); border: 1px solid var(--line); border-left: 4px solid var(--red); border-radius: var(--radius); padding: 14px 16px; margin-top: 16px; }
+  .novidades-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .novidades h2 { margin: 0; font-size: 15px; }
+  .novidades ul { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13.5px; line-height: 1.55; }
+  .novidades li b { color: var(--navy); }
+  .novidades .quando { color: var(--faint); font-size: 12px; }
+  .btn-ok { border: 1px solid var(--line); background: var(--white); color: var(--navy); border-radius: 8px; padding: 5px 12px; font-size: 13px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+  .tag.novo { background: var(--red); color: #fff; margin-right: 6px; }
+  .mudou { margin-top: 10px; font-size: 12.5px; color: #7d0a1c; background: var(--red-soft); border-radius: 8px; padding: 6px 10px; line-height: 1.45; }
+  .bim.mudou-bim { box-shadow: inset 0 0 0 2px var(--red); }
+  table.comp td.mudou-cel { background: var(--red-soft); color: var(--red); font-weight: 700; }
+
+  /* Evolução por bimestre */
+  .evolucao { display: block; width: 100%; height: 34px; margin: -4px 0 8px; overflow: visible; }
+  .tendencia { font-size: 12px; color: var(--dim); margin: -4px 0 8px; }
+  .tendencia b { color: var(--navy); }
+  .tendencia b.vermelho { color: var(--red); }
+
   .ordem { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--dim); margin-bottom: 12px; flex-wrap: wrap; }
   .ordem select { padding: 6px 8px; border-radius: 7px; border: 1px solid var(--line); color: var(--navy); font-size: 13.5px; background: #fff; }
 
@@ -294,6 +332,9 @@ async function carregar() {
   const dt = new Date(DATA.atualizado_em);
   document.getElementById('sync').textContent = isNaN(dt) ? '' :
     `Atualizado em ${dt.toLocaleDateString('pt-BR')} às ${dt.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}`;
+  // "Hoje" é a tela de abertura: a pergunta mais comum ao abrir o app.
+  if ((DATA.grade || []).length) aba = 'hoje';
+  else if (aba === 'hoje') aba = 'notas';
   render();
 }
 
@@ -316,12 +357,17 @@ function render() {
     <div class="kpi ${emRiscoFalta.length ? 'alerta' : ''}"><div class="rot">Maior % de faltas</div><div class="val num">${piorFalta ? fmt(piorFalta.f.pct) + '%' : '—'}</div><div class="sub">${piorFalta ? esc(nomeCurto(piorFalta.d.disciplina)) : ''} · limite ${fmt(piorFalta?.f.limite ?? 25, 0)}%</div></div>
   </div>`;
 
+  h += renderNovidades();
+
+  const temGrade = (DATA.grade || []).length > 0;
   h += `<div class="abas">
+    ${temGrade ? `<button class="aba ${aba === 'hoje' ? 'ativa' : ''}" data-aba="hoje">Posso faltar?</button>` : ''}
     <button class="aba ${aba === 'notas' ? 'ativa' : ''}" data-aba="notas">Notas${emRiscoNota.length ? `<span class="badge">${emRiscoNota.length}</span>` : ''}</button>
     <button class="aba ${aba === 'faltas' ? 'ativa' : ''}" data-aba="faltas">Faltas${emRiscoFalta.length ? `<span class="badge">${emRiscoFalta.length}</span>` : ''}</button>
     <button class="aba ${aba === 'horario' ? 'ativa' : ''}" data-aba="horario">Horário</button>
   </div>`;
 
+  if (temGrade) h += `<div class="painel ${aba === 'hoje' ? 'ativo' : ''}">${renderHoje(an)}</div>`;
   h += `<div class="painel ${aba === 'notas' ? 'ativo' : ''}">${renderNotas(an)}</div>`;
   h += `<div class="painel ${aba === 'faltas' ? 'ativo' : ''}">${renderFaltas(an)}</div>`;
   h += `<div class="painel ${aba === 'horario' ? 'ativo' : ''}">${renderHorario()}</div>`;
@@ -345,6 +391,154 @@ function seletorOrdem() {
     </select></div>`;
 }
 
+const minutos = t => { const [a, b] = t.split(':').map(Number); return a * 60 + b; };
+/** Cada aula tem 50 min: um bloco 07:00–08:40 vale 2 aulas (2 faltas). */
+const aulasNoBloco = a => Math.max(1, Math.round((minutos(a.fim) - minutos(a.inicio)) / 50));
+
+/** Dia que interessa pra "posso faltar?": hoje, se ainda tem aula por vir;
+ * senão o próximo dia da semana com aula. */
+function diaAlvo(grade) {
+  const agora = new Date();
+  const agoraMin = agora.getHours() * 60 + agora.getMinutes();
+  for (let k = 0; k < 7; k++) {
+    const dia = (agora.getDay() + k) % 7;
+    const aulas = grade.filter(a => a.dia_semana_js === dia).sort((a, b) => minutos(a.inicio) - minutos(b.inicio));
+    if (!aulas.length) continue;
+    if (k === 0 && minutos(aulas[aulas.length - 1].fim) <= agoraMin) continue;
+    return { dia, k, aulas, agoraMin };
+  }
+  return null;
+}
+
+function quandoTxt(dia, k) {
+  if (k === 0) return 'hoje';
+  if (k === 1) return 'amanhã';
+  return (dia === 0 || dia === 6 ? 'no ' : 'na ') + DIAS[dia].toLowerCase();
+}
+
+const listaNomes = ns => ns.length < 2 ? ns.join('') : ns.slice(0, -1).join(', ') + ' e ' + ns[ns.length - 1];
+
+function renderHoje(an) {
+  const alvo = diaAlvo(DATA.grade || []);
+  if (!alvo) return '<div class="erro">Nenhuma aula na grade.</div>';
+  const quando = quandoTxt(alvo.dia, alvo.k);
+  const porCodigo = Object.fromEntries(an.map(x => [x.d.codigo, x]));
+
+  // Uma linha por matéria, somando as aulas de todos os blocos dela no dia.
+  const materias = [];
+  alvo.aulas.forEach(a => {
+    let m = materias.find(x => x.codigo === a.codigo);
+    if (!m) materias.push(m = { codigo: a.codigo, blocos: [], aulas: 0, x: porCodigo[a.codigo], nome: nomeCurto(porCodigo[a.codigo]?.d.disciplina || a.disciplina) });
+    m.blocos.push(a);
+    m.aulas += aulasNoBloco(a);
+  });
+  materias.forEach(m => {
+    const d = m.x?.d;
+    m.sobra = d?.pode_faltar_ainda ?? null;
+    m.depois = m.sobra == null ? null : m.sobra - m.aulas;
+    // "cuidado" = depois de faltar, mais um dia igual a este já estoura.
+    m.status = m.depois == null ? 'ok' : m.depois < 0 || m.x.f.nivel === 'reprovado' ? 'estoura' : m.depois < m.aulas ? 'cuidado' : 'ok';
+  });
+
+  const total = materias.reduce((s, m) => s + m.aulas, 0);
+  const estoura = materias.filter(m => m.status === 'estoura');
+  const cuidado = materias.filter(m => m.status === 'cuidado');
+  const conhecidas = materias.filter(m => m.depois != null);
+  const apertada = [...conhecidas].sort((a, b) => a.depois - b.depois)[0];
+  const sobra = n => `${fmt(n, 0)} falta${Math.round(n) === 1 ? '' : 's'} sobrando`;
+
+  let cls, resp, txt;
+  if (estoura.length) {
+    cls = 'nao'; resp = 'Melhor não';
+    txt = `Faltando ${quando} você passa do limite de faltas em <b>${esc(listaNomes(estoura.map(m => m.nome)))}</b>.`;
+  } else if (cuidado.length) {
+    cls = 'cuidado'; resp = 'Pode, mas com cuidado';
+    txt = `Você perde <b>${total} aula${total === 1 ? '' : 's'}</b>. ${cuidado.map(m => `<b>${esc(m.nome)}</b> fica com ${sobra(m.depois)}`).join('; ')} — depois disso, mais um dia assim estoura.`;
+  } else {
+    cls = ''; resp = 'Pode faltar';
+    txt = `Se faltar ${quando}, você perde <b>${total} aula${total === 1 ? '' : 's'}</b> e nenhuma matéria entra em risco.` +
+      (apertada ? ` A mais apertada é ${esc(apertada.nome)}, que fica com ${sobra(apertada.depois)}.` : '');
+  }
+
+  let h = `<div class="veredito ${cls}"><div class="pq">Posso faltar ${quando}?</div><div class="resp">${resp}</div>${txt}</div>`;
+  h += `<div class="hoje-lista"><h4>${DIAS[alvo.dia]}<span>${alvo.k < 2 ? quando : ''}</span></h4>`;
+  materias.forEach(m => {
+    const horas = m.blocos.map(a => `${a.inicio} – ${a.fim}`).join(' · ');
+    const agora = alvo.k === 0 && m.blocos.some(a => alvo.agoraMin >= minutos(a.inicio) && alvo.agoraMin < minutos(a.fim));
+    const q = m.depois == null ? '<b>—</b>sem dados de faltas'
+      : `<b class="num">${m.depois < 0 ? 'estoura' : fmt(m.depois, 0) + ' sobrando'}</b>hoje: ${fmt(m.sobra, 0)} · perde ${m.aulas}`;
+    h += `<div class="h-aula ${m.status} ${agora ? 'agora' : ''}"><div><div class="h num">${horas}${agora ? ' · agora' : ''}</div><div class="d">${esc(m.nome)}</div></div><div class="q">${q}</div></div>`;
+  });
+  h += '</div>';
+  return h + `<p class="legenda" style="margin-top:10px">"Sobrando" é quantas faltas ainda cabem na matéria depois de faltar ${quando} (cada 50 min de aula conta 1 falta). O limite é ${fmt((1 - (DATA.frequencia_minima ?? .75)) * 100, 0)}% das aulas do ano.</p>`;
+}
+
+/* ---------- Novidades (o que mudou desde as últimas atualizações) ---------- */
+const NOME_MUD = { a1: 'A1', a2: 'A2', at: 'AT', bs: 'Bônus', be: 'Bônus extra', ar: 'Recuperação', mb: 'Média' };
+const FINAIS_MUD = { exame_final: 'Exame final', nota_conselho: 'Nota de conselho', media_final: 'Média final' };
+const mudancas = () => DATA.mudancas || [];
+const mudancasDe = (codigo, faltas) => mudancas().filter(m => m.codigo === codigo && (m.campo === 'faltas') === faltas);
+const dataCurta = iso => { const [, m, d] = (iso || '').split('-'); return d ? `${d}/${m}` : ''; };
+
+function textoMudanca(m) {
+  if (m.campo === 'faltas') {
+    const dif = (m.depois ?? 0) - (m.antes ?? 0);
+    return `${dif > 0 ? '+' : ''}${fmt(dif, 0)} falta${Math.abs(dif) === 1 ? '' : 's'} (${fmt(m.antes, 0)} → ${fmt(m.depois, 0)})`;
+  }
+  const rot = FINAIS_MUD[m.campo] || `${NOME_MUD[m.campo.slice(0, -1)] || m.campo} ${m.campo.slice(-1)}º bim`;
+  return `${rot}: ${fmt(m.antes)} → <b>${fmt(m.depois)}</b>`;
+}
+
+/** Linha "Novo em dd/mm: …" dentro do cartão da matéria. */
+function blocoMudou(lista) {
+  if (!lista.length) return '';
+  const porDia = {};
+  lista.forEach(m => (porDia[m.em] ||= []).push(textoMudanca(m)));
+  return Object.entries(porDia).sort().reverse()
+    .map(([em, ts]) => `<div class="mudou">Novo em ${dataCurta(em)}: ${ts.join(' · ')}</div>`).join('');
+}
+
+const chaveVisto = () => mudancas().map(m => `${m.codigo}.${m.campo}.${m.depois}`).sort().join('|');
+
+function renderNovidades() {
+  const ms = mudancas();
+  if (!ms.length || lerPref('visto', '') === chaveVisto()) return '';
+  const nomes = Object.fromEntries((DATA.disciplinas || []).map(d => [d.codigo, nomeCurto(d.disciplina)]));
+  const porMateria = {};
+  ms.forEach(m => (porMateria[m.codigo] ||= []).push(m));
+  const ultima = l => l.map(m => m.em).sort().pop();
+  const itens = Object.entries(porMateria)
+    .sort((a, b) => ultima(b[1]).localeCompare(ultima(a[1])))
+    .map(([cod, l]) => `<li><b>${esc(nomes[cod] || cod)}</b> <span class="quando">${dataCurta(l[0].em)}</span> — ${l.map(textoMudanca).join(' · ')}</li>`)
+    .join('');
+  const n = Object.keys(porMateria).length;
+  return `<div class="novidades"><div class="novidades-top"><h2>Novidades em ${n} matéria${n === 1 ? '' : 's'}</h2><button class="btn-ok" id="visto">Ok, vi</button></div><ul>${itens}</ul></div>`;
+}
+
+/* ---------- Evolução da média por bimestre ---------- */
+function graficoEvolucao(n) {
+  const pts = n.bims.map((b, i) => ({ i, mb: b.mb, parcial: b.parcial })).filter((p, i) => !n.bims[i].futuro && p.mb != null);
+  if (pts.length < 2) return '';
+  // Colunas alinhadas com os 4 quadradinhos de bimestre logo acima.
+  // Eixo de (menor nota ou média mínima) − 1 até 10, pra variação aparecer.
+  const lo = Math.max(0, Math.min(mediaMin, ...pts.map(p => p.mb)) - 1);
+  const x = i => 37.5 + i * 75, y = v => 31 - (v - lo) / (10 - lo) * 28;
+  const linha = pts.map(p => `${x(p.i)},${y(p.mb)}`).join(' ');
+  const svg = `<svg class="evolucao" viewBox="0 0 300 34" preserveAspectRatio="none" aria-hidden="true">
+    <line x1="0" x2="300" y1="${y(mediaMin)}" y2="${y(mediaMin)}" stroke="var(--red)" stroke-width="1" stroke-dasharray="4 4" opacity=".6" vector-effect="non-scaling-stroke"/>
+    <polyline points="${linha}" fill="none" stroke="var(--navy)" stroke-width="2" vector-effect="non-scaling-stroke"/>
+  </svg>`;
+  // Tendência entre os dois últimos bimestres fechados (o parcial ainda vai mudar).
+  const fech = pts.filter(p => !p.parcial);
+  let tend = '';
+  if (fech.length >= 2) {
+    const [a, b] = fech.slice(-2), dif = b.mb - a.mb;
+    tend = Math.abs(dif) < 0.05 ? `<div class="tendencia">Estável do ${a.i + 1}º pro ${b.i + 1}º bimestre</div>`
+      : `<div class="tendencia">${dif > 0 ? '↑ Subiu' : '↓ Caiu'} <b class="num ${dif < 0 ? 'vermelho' : ''}">${fmt(Math.abs(dif))}</b> do ${a.i + 1}º pro ${b.i + 1}º bimestre</div>`;
+  }
+  return svg + tend;
+}
+
 function renderNotas(an) {
   const urg = x => x.n.nivel === 'garantida' ? -1 : x.n.provas.nota ?? 99;
   const lista = ordenar(an, (a, b) => urg(b) - urg(a));
@@ -360,9 +554,12 @@ function renderNotas(an) {
       critico: '<span class="tag solido">Crítico</span>',
     }[n.nivel];
 
+    const muds = mudancasDe(d.codigo, false);
+    const mudouCampo = new Set(muds.map(m => m.campo));
     const bimsHtml = n.bims.map((b, i) => {
       const cls = b.futuro ? 'vazio' : b.fechado && (b.mb ?? 0) < mediaMin ? 'baixa' : '';
-      return `<div class="bim ${cls} ${b.parcial ? 'parcial' : ''}"><div class="b">${i + 1}º bim${b.parcial ? ' · parcial' : ''}</div><div class="n num">${b.futuro ? '—' : fmt(b.mb)}</div></div>`;
+      const mudouBim = muds.some(m => m.campo.endsWith(String(i + 1)) && !FINAIS_MUD[m.campo]);
+      return `<div class="bim ${cls} ${b.parcial ? 'parcial' : ''} ${mudouBim ? 'mudou-bim' : ''}"><div class="b">${i + 1}º bim${b.parcial ? ' · parcial' : ''}</div><div class="n num">${b.futuro ? '—' : fmt(b.mb)}</div></div>`;
     }).join('');
 
     const progresso = Math.min(100, n.soma / (NB * 10) * 100);
@@ -384,15 +581,17 @@ function renderNotas(an) {
 
     const comp = [['a1','Avaliação 1'],['a2','Avaliação 2'],['at','Atividades'],['bs','Bônus'],['be','Bônus extra'],['ar','Recuperação'],['mb','Média']];
     const tabela = `<div class="tabela-wrap"><table class="comp"><tr><th></th>${n.bims.map((_, i) => `<th>${i + 1}º</th>`).join('')}</tr>
-      ${comp.map(([k, rot]) => `<tr><td>${rot}</td>${n.bims.map(b => `<td class="num">${!b.futuro && b[k] != null ? fmt(b[k]) : '·'}</td>`).join('')}</tr>`).join('')}
+      ${comp.map(([k, rot]) => `<tr><td>${rot}</td>${n.bims.map((b, i) => `<td class="num ${mudouCampo.has(k + (i + 1)) ? 'mudou-cel' : ''}">${!b.futuro && b[k] != null ? fmt(b[k]) : '·'}</td>`).join('')}</tr>`).join('')}
     </table></div>`;
 
     h += `<div class="card ${risco ? 'risco' : ''}">
-      <div class="card-top"><div><h3>${esc(nomeCurto(d.disciplina))}</h3><div class="cod">${esc(d.codigo)}</div></div>${tag}</div>
+      <div class="card-top"><div><h3>${esc(nomeCurto(d.disciplina))}</h3><div class="cod">${esc(d.codigo)}</div></div><div>${muds.length ? '<span class="tag novo">Novo</span>' : ''}${tag}</div></div>
       <div class="bims">${bimsHtml}</div>
+      ${graficoEvolucao(n)}
       <div class="linha-media"><span>Média até agora (÷4)</span><b class="num ${(n.mbf ?? 0) < mediaMin ? 'vermelho' : ''}">${fmt(n.mbf)}</b></div>
       <div class="barra ${risco ? 'vermelha' : ''}"><i style="width:${progresso}%"></i><span class="marco" style="left:${marco}%"></span></div>
       <div class="falta-nota ${risco ? 'vermelho' : ''}">${msg}</div>
+      ${blocoMudou(muds)}
       <details class="det"><summary>Detalhes e simulador</summary>
         ${tabela}
         <div class="pesos">Média do bimestre nesta matéria: ${pesosTxt} (máx. 10)</div>
@@ -413,12 +612,14 @@ function renderFaltas(an) {
     const tag = { ok: '<span class="tag">Tranquilo</span>', atencao: '<span class="tag vermelho">Cuidado</span>', risco: '<span class="tag solido">Risco</span>', reprovado: '<span class="tag solido">Estourou</span>' }[f.nivel];
     const dias = d.pode_faltar_dias;
     const limiteAulas = d.aulas_previstas != null ? d.aulas_previstas * lim / 100 : null;
+    const muds = mudancasDe(d.codigo, true);
     h += `<div class="card ${vermelho ? 'risco' : ''}">
-      <div class="card-top"><div><h3>${esc(nomeCurto(d.disciplina))}</h3><div class="cod">${esc(d.codigo)}</div></div>${tag}</div>
+      <div class="card-top"><div><h3>${esc(nomeCurto(d.disciplina))}</h3><div class="cod">${esc(d.codigo)}</div></div><div>${muds.length ? '<span class="tag novo">Novo</span>' : ''}${tag}</div></div>
       <div class="falta-num"><span>Faltas</span><b class="num ${vermelho ? 'vermelho' : ''}">${fmt(d.faltas, 0)}<span style="font-size:13px;color:var(--dim);font-weight:600"> / ${fmt(limiteAulas, 0)} permitidas</span></b></div>
       <div class="barra ${vermelho ? 'vermelha' : ''}"><i style="width:${f.usado}%"></i><span class="marco" style="left:calc(100% - 2px)"></span></div>
       <div class="linha-media" style="margin-top:8px"><span>${fmt(f.pct)}% de faltas · ${fmt(d.aulas_previstas, 0)} aulas no ano</span><span class="num">${fmt(f.usado, 0)}% do limite</span></div>
       <div class="pode">Ainda pode faltar <b class="num">${fmt(d.pode_faltar_ainda, 0)} aulas</b>${dias != null ? ` ≈ <b class="num">${dias} dia${dias === 1 ? '' : 's'}</b> de aula` : ''}</div>
+      ${blocoMudou(muds)}
     </div>`;
   });
   return h + '</div>';
@@ -450,6 +651,7 @@ function renderHorario() {
 
 function ligarEventos() {
   document.querySelectorAll('.aba').forEach(b => b.addEventListener('click', () => { aba = b.dataset.aba; salvarPref('aba', aba); render(); }));
+  document.getElementById('visto')?.addEventListener('click', () => { salvarPref('visto', chaveVisto()); render(); });
   document.querySelectorAll('#ordem').forEach(s => s.addEventListener('change', () => { ordem = s.value; salvarPref('ordem', ordem); render(); }));
   document.querySelectorAll('[data-sim]').forEach(inp => inp.addEventListener('input', () => {
     const out = document.getElementById('sim-' + inp.dataset.sim);
